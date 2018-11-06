@@ -5,6 +5,7 @@ import sys
 import matplotlib.pyplot as plt
 import pandas
 import functools
+import pickle
 
 tf.logging.set_verbosity(tf.logging.INFO)
 
@@ -48,12 +49,11 @@ def inp_functions(train_file, test_file, target):
   print "Loading data into memory."
   train_df = pandas.read_csv(train_file)
   test_df = pandas.read_csv(test_file)
-  statistics = compute_statistics(train_df)
   train_inpf = functools.partial(easy_input_function, train_df, target,
       num_epochs=2, shuffle=True, batch_size=64)
   test_inpf = functools.partial(easy_input_function, test_df, target,
       num_epochs=1, shuffle=False, batch_size=64)
-  return train_inpf, test_inpf, statistics
+  return train_inpf, test_inpf
 
 def build_features(statistics):
   pu_location_id = fc.categorical_column_with_identity(
@@ -117,10 +117,7 @@ def build_features(statistics):
   linear_feature_columns = [location, cross_all]
   return dnn_feature_columns, linear_feature_columns
 
-def build_classifier():
-  train_inpf, test_inpf, statistics = inp_functions(train_file,
-      test_file,
-      'tip')
+def build_classifier(statistics):
   dnn_feature_columns, linear_feature_columns = build_features(statistics)
   classifier = tf.estimator.DNNLinearCombinedClassifier(
       model_dir=CLASSIFIER_MODEL,
@@ -132,12 +129,9 @@ def build_classifier():
       n_classes=2,
       batch_norm=True,
       )
-  return classifier, train_inpf, test_inpf
+  return classifier
 
-def build_regressor():
-  train_inpf, test_inpf, statistics = inp_functions(train_tips_only_file,
-      test_tips_only_file,
-      'tip_amount')
+def build_regressor(statistics):
   dnn_feature_columns, linear_feature_columns = build_features(statistics)
   classifier = tf.estimator.DNNLinearCombinedRegressor(
       model_dir=REGRESSOR_MODEL,
@@ -148,7 +142,7 @@ def build_regressor():
       dnn_activation_fn=tf.nn.relu,
       batch_norm=True,
       )
-  return classifier, train_inpf, test_inpf
+  return classifier
 
 # Only this part of the code and below needs to be edited.
 TRAIN = False
@@ -156,12 +150,24 @@ TRAIN = False
 # TODO: Shift the loads out. We have to precompute the statistics and save it in
 # a static file. But since the data is small, we just compute the statistics
 # every time.
-classifier, c_train_inpf, c_test_inpf = build_classifier()
-regressor, r_train_inpf, r_test_inpf = build_regressor()
+with open('c_stats.pickle', 'rb') as f:
+  c_statistics = pickle.load(f)
+with open('r_stats.pickle', 'rb') as f:
+  r_statistics = pickle.load(f)
+classifier = build_classifier(c_statistics)
+regressor = build_regressor(r_statistics)
+
 if TRAIN:
+  c_train_inpf, c_test_inpf = inp_functions(train_file,
+      test_file,
+      'tip')
   classifier.train(c_train_inpf)
   c_result = classifier.evaluate(c_test_inpf)
   print c_result
+
+  r_train_inpf, r_test_inpf = inp_functions(train_tips_only_file,
+      test_tips_only_file,
+      'tip_amount')
   regressor.train(r_train_inpf)
   r_result = regressor.evaluate(r_test_inpf)
   print r_result
