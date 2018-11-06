@@ -24,7 +24,8 @@ for the test data.
 
 ## Initial Setup
 
-1. Clone this repository.
+1. Clone this repository. You can run a prediction as is once this is done.
+   Refer to "how do I make a prediction" below for more information.
 2. Download the dataset from the link above.
 3. Put it in the `nyc_taxi` directory.
 4. Rename it as `original.csv`
@@ -47,12 +48,12 @@ for the test data.
 this repository. This should run as is.**
 
 1. First note that this only works on a single example. It will not work as
-   expected if the CSV has more than 2 rows (header and data). Feel free to
-   include `tip_amount` and `total_amount`. It won't be used in any case, and
-   for the sake of this exercise, it's easier too.
-2. Change the data in `test_1.csv`.
-3. Open `nyc_taxi.py` and change `Line 154` to `Train = False`.
-4. `python nyc_taxi.py`
+   expected if the CSV has more than 2 rows (header and data). The fields
+   `tip_amount` and `total_amount` have to be included, but won't be used. 
+2. Change the data in `test_1.csv`, if necessary.
+3. `python nyc_taxi.py`
+4. The code should run as is if TensorFlow is already installed, and the sample
+   output below will be shown.
 
 ## Sample Output
 
