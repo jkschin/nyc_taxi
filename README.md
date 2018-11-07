@@ -31,6 +31,8 @@ for the test data.
 4. Rename it as `original.csv`
 5. If you haven't already, use `pip` to install TensorFlow. You can refer to the
    TensorFlow website for more details.
+   
+P.S. I realized there were some package dependencies that were not included. I should have setup a `virtualenv` and done `pip freeze`.
 
 ## How do I generate the datasets?
 
